@@ -1,15 +1,125 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="utf-8">
     <title>Sharding</title>
+    <style>
+      #paper { width: 100%; height: 1000px; }
+    </style>
     <script src="raphael.js"></script>
     <script>
       Raphael(function() {
-        var r = Raphael("raphael");
+        randomColor = function() { return Raphael.rgb(Math.random() * 255, Math.random() * 255, Math.random() * 255); }
+
+        var paper    = Raphael("paper"),
+            center   = { x: paper.width / 2, y: paper.height / 2 },
+            server1  = paper.rect(center.x - 50, 100, 100, 100, 3).attr({ opacity: 0 }),
+            server2  = paper.rect(center.x - 200 - 50, 400, 100, 100, 3).attr({ opacity: 0 }),
+            server3  = paper.rect(center.x + 200 - 50, 400, 100, 100, 3).attr({ opacity: 0 }),
+            server4  = paper.rect(center.x + 200 - 50, 100, 100, 100, 3).attr({ opacity: 0 }),
+            colors   = ["#f00", "#0f0", "#00f", "#ff0"],
+            data     = paper.set(),
+            new_data = paper.set(),
+            step     = 0;
+
+        for(var i = 0; i < 1000; i++) { data.push(paper.circle(center.x, -100, 3).attr({ fill: randomColor() })); }
+
+        var steps = [
+          function() {
+            server1.animate({ opacity: 1 }, 1000);
+            server2.animate({ opacity: 1 }, 1000);
+            server3.animate({ opacity: 1 }, 1000);
+
+            var t = 0;
+            var mod = 0;
+            var count = 0
+            data.forEach(function(circle) {
+              setTimeout(function() {
+                mod = (mod + 1) % 3;
+                var coords = [ { x: (Math.random() * (100 - (3 * 2))) + (center.x - 50) + 3,
+                                 y: (Math.random() * (100 - (3 * 2))) + 100 + 3 },
+                               { x: (Math.random() * (100 - (3 * 2))) + (center.x - 200 - 50) + 3,
+                                 y: (Math.random() * (100 - (3 * 2))) + 400 + 3 },
+                               { x: (Math.random() * (100 - (3 * 2))) + (center.x + 200 - 50) + 3,
+                                 y: (Math.random() * (100 - (3 * 2))) + 400 + 3 }
+                             ];
+                circle.stop().animate({ "33%":  { cx: center.x, cy: 300 },
+                                        "66%":  { fill: colors[mod] },
+                                        "100%": { cx: coords[mod].x, cy: coords[mod].y } }, 750);
+              }, t += (count++ > 20 ? 10 : 500));
+            });
+          },
+          function() {
+            var t = 0;
+            var mod = 0;
+            for(var i = 0; i < 1000; i++) { new_data.push(paper.circle(center.x, -100, 3).attr({ fill: randomColor() })); }
+
+            new_data.forEach(function(circle) {
+              setTimeout(function() {
+                mod = (mod + 1) % 3;
+                var coords = [ { x: (Math.random() * (100 - (3 * 2))) + (center.x - 50) + 3,
+                                 y: (Math.random() * (100 - (3 * 2))) + 100 + 3 },
+                               { x: (Math.random() * (100 - (3 * 2))) + (center.x - 200 - 50) + 3,
+                                 y: (Math.random() * (100 - (3 * 2))) + 400 + 3 },
+                               { x: (Math.random() * (100 - (3 * 2))) + (center.x + 200 - 50) + 3,
+                                 y: (Math.random() * (100 - (3 * 2))) + 400 + 3 }
+                             ];
+                circle.attr({ fill: colors[mod] });
+                circle.stop().animate({ "100%": { cx: coords[mod].x, cy: coords[mod].y } }, 1000);
+              }, t+= 10);
+            });
+
+            t = 0;
+            data.forEach(function(circle) {
+              setTimeout(function() {
+                circle.clone().animate({ "100%": { cx: center.x, cy: paper.height, opacity: 0 } }, 1000);
+              }, t += 10);
+            });
+          },
+          function() {
+            new_data.forEach(function(circle) {
+              data.push(circle);
+            });
+            new_data = null;
+
+            server1.animate({ "100%": { transform: "t-200,0" } }, 1000);
+            data.forEach(function(circle) {
+              if(circle.attr("fill") == "#f00"){
+                circle.animate({ "100%": { transform: "t-200,0" } }, 1000);
+              }
+            });
+
+            setTimeout(function() {
+              server4.animate({ "100%": { opacity: 1 } });
+              var mod = 0, t = 0, count = 0;
+              data.forEach(function(circle) {
+                setTimeout(function() {
+                  mod = (mod + 1) % 4;
+                  var coords = [ { x: (Math.random() * (100 - (3 * 2))) + (center.x - 200 - 50) + 3,
+                                   y: (Math.random() * (100 - (3 * 2))) + 100 + 3 },
+                                 { x: (Math.random() * (100 - (3 * 2))) + (center.x + 200 - 50) + 3,
+                                   y: (Math.random() * (100 - (3 * 2))) + 100 + 3 },
+                                 { x: (Math.random() * (100 - (3 * 2))) + (center.x - 200 - 50) + 3,
+                                   y: (Math.random() * (100 - (3 * 2))) + 400 + 3 },
+                                 { x: (Math.random() * (100 - (3 * 2))) + (center.x + 200 - 50) + 3,
+                                   y: (Math.random() * (100 - (3 * 2))) + 400 + 3 }
+                               ];
+                  circle.stop().animate({ "33%":  { cx: center.x, cy: 300, transform: "t0,0" },
+                                          "66%":  { fill: colors[mod] },
+                                          "100%": { cx: coords[mod].x, cy: coords[mod].y } }, 750);
+                }, t += (count++ > 20 ? 10 : 500));
+              });
+            }, 1000);
+          }
+        ];
+
+        document.getElementById("paper").onclick = function() {
+          steps[step++]();
+        };
       });
     </script>
   </head>
   <body>
-    <div id="raphael"></div>
+    <div id="paper"></div>
   </body>
 </html>
