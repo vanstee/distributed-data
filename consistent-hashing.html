@@ -1,15 +1,94 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="utf-8">
     <title>Consistent Hashing</title>
+    <style>
+      #paper { width: 100%; height: 1000px; }
+    </style>
     <script src="raphael.js"></script>
     <script>
       Raphael(function() {
-        var r = Raphael("raphael");
+        randomColor = function() { return Raphael.rgb(Math.random() * 255, Math.random() * 255, Math.random() * 255); }
+
+        var paper   = Raphael("paper"),
+            center  = { x: paper.width / 2, y: paper.height / 2 },
+            ring    = paper.circle(center.x, 400, 100).attr({ opacity: 0 }),
+            server1 = paper.circle(center.x, 400 - 100, 20).attr({ opacity: 0, fill: "#fff" }),
+            server2 = paper.circle(center.x, 400 + 100, 20).attr({ opacity: 0, fill: "#fff" }),
+            server3 = paper.rect(center.x + 200 - 50, 400, 100, 100, 3).attr({ opacity: 0 }),
+            server4 = paper.rect(center.x + 200 - 50, 100, 100, 100, 3).attr({ opacity: 0 }),
+            colors  = ["#f00", "#0f0", "#00f", "#ff0"],
+            data    = paper.set(),
+            step    = 0;
+
+        for(var i = 0; i < 1000; i++) { data.push(paper.circle(center.x, -100, 3).attr({ fill: randomColor(), opacity: 0 })); }
+
+        var steps = [
+          function() {
+            ring.animate({ opacity: 1 }, 1000);
+            var t = 0;
+            data.forEach(function(circle) {
+              setTimeout(function() {
+                var a = Math.floor(Math.random() * 194) - 97,
+                    b = Math.sqrt((97*97) - (a*a))
+                    c = Math.floor(Math.random() * b*2) - b,
+                    x = center.x + a,
+                    y = 400      + c;
+                circle.animate({ cx: x, cy: y, opacity: 1 }, 1000);
+              }, t += 1);
+            });
+          },
+          function() {
+            var t = 0;
+            data.forEach(function(circle) {
+              setTimeout(function() {
+                var rgb = Raphael.getRGB(circle.attr("fill"));
+                var hsb = Raphael.rgb2hsb(rgb.r, rgb.g, rgb.b);
+                var degree = Math.floor(hsb.h * 360);
+                circle.animate({ cx: center.x, cy: 400, transform: "r" + degree + "t0,-100" }, 1000);
+              }, t += 10);
+            });
+          },
+          function() {
+            var t = 0;
+            server1.toFront().animate({ opacity: 1 }, 1000);
+            data.forEach(function(circle) {
+              setTimeout(function() {
+                var rgb = Raphael.getRGB(circle.attr("fill"));
+                var hsb = Raphael.rgb2hsb(rgb.r, rgb.g, rgb.b);
+                var degree = Math.floor(hsb.h * 360);
+                circle.clone().attr({ opacity: 0 }).toBack()
+                              .animate({ "0%":   { transform: "r0t0,0", cx: 100, cy: center.y },
+                                         "50%":  { cx: center.x, cy: 300, opacity: 1 },
+                                         "100%": { cx: center.x, cy: 400, transform: "r" + degree + "t0,-100" } }, 1000);
+              }, t += 10);
+            });
+          },
+          function() {
+            var t = 0;
+            server2.toFront().animate({ opacity: 2 }, 1000);
+            data.forEach(function(circle) {
+              setTimeout(function() {
+                var rgb = Raphael.getRGB(circle.attr("fill"));
+                var hsb = Raphael.rgb2hsb(rgb.r, rgb.g, rgb.b);
+                var degree = Math.floor(hsb.h * 360);
+                circle.clone().attr({ opacity: 0 }).toBack()
+                      .animate({ "0%":   { transform: "r0t0,0", cx: 100, cy: 400 },
+                                 "50%":  { cx: center.x, cy: degree < 180 ? 500 : 300, opacity: 1 },
+                                 "100%": { cx: center.x, cy: 400, transform: "r" + (degree < 180 ? degree * -1 : (360 - degree) * -1) + "t0," + (degree < 180 ? "100" : "-100") } }, 3000);
+              }, t += 100);
+            });
+          }
+        ];
+
+        document.getElementById("paper").onclick = function() {
+          steps[step++]();
+        };
       });
     </script>
   </head>
   <body>
-    <div id="raphael"></div>
+    <div id="paper"></div>
   </body>
 </html>
