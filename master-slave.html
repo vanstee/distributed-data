@@ -1,15 +1,135 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="utf-8">
     <title>Master-Slave</title>
+    <style>
+      #paper { width: 100%; height: 1000px; }
+    </style>
     <script src="raphael.js"></script>
     <script>
       Raphael(function() {
-        var r = Raphael("raphael");
+        randomColor = function() { return Raphael.rgb(Math.random() * 255, Math.random() * 255, Math.random() * 255); }
+
+        var paper  = Raphael("paper"),
+            center = { x: paper.width / 2, y: paper.height / 2 },
+            master = paper.rect(center.x - 100,      50,  200, 100, 3).attr({ opacity: 0 }),
+            mtext  = paper.text(center.x, 100, "master").attr({ opacity: 0, 'font-size': 32 }),
+            slave1 = paper.rect(center.x - 300 - 50, 300, 100, 100, 3).attr({ opacity: 0 }),
+            slave2 = paper.rect(center.x - 50,       300, 100, 100, 3).attr({ opacity: 0 }),
+            slave3 = paper.rect(center.x + 300 - 50, 300, 100, 100, 3).attr({ opacity: 0 }),
+            s1text = paper.text(center.x - 300, 350, "slave").attr({ opacity: 0, 'font-size': 32 }),
+            s2text = paper.text(center.x,       350, "slave").attr({ opacity: 0, 'font-size': 32 }),
+            s3text = paper.text(center.x + 300, 350, "slave").attr({ opacity: 0, 'font-size': 32 }),
+            data   = paper.set(),
+            step   = 0;
+
+        for(var i = 0; i < 1000; i++) { data.push(paper.circle(center.x, -100, 3).attr({ fill: randomColor() })); }
+
+        var steps = [
+          function() {
+            master.animate({ opacity: 1 }, 1000);
+            mtext.animate({ opacity: 1 }, 1000);
+
+            setTimeout(function() {
+              var t = 0;
+              data.forEach(function(circle) {
+                var x = (Math.random() * (200 - (3 * 2))) + (center.x - 100) + 3,
+                    y = (Math.random() * (100 - (3 * 2))) + 50 + 3;
+                setTimeout(function() {
+                  circle.stop().animate({ "100%": { cx: x, cy: y, easing: "<>" } }, 1000);
+                }, t += 1);
+              });
+            }, 1000);
+          },
+          function() {
+            slave1.animate({ opacity: 1 }, 1000);
+            s1text.animate({ opacity: 1 }, 1000);
+
+            setTimeout(function() {
+              var t = 0;
+              data.forEach(function(circle) {
+                var x = (Math.random() * (100 - (3 * 2))) + (center.x - 300 - 50) + 3,
+                    y = (Math.random() * (100 - (3 * 2))) + 300 + 3;
+                setTimeout(function() {
+                  circle.clone().stop().animate({ "100%": { cx: x, cy: y, easing: "<>" } }, 1000);
+                }, t += 1);
+              });
+            }, 1000);
+          },
+          function() {
+            slave2.animate({ opacity: 1 }, 1000);
+            s2text.animate({ opacity: 1 }, 1000);
+
+            setTimeout(function() {
+              var t = 0;
+              data.forEach(function(circle) {
+                var x = (Math.random() * (100 - (3 * 2))) + (center.x - 50) + 3,
+                    y = (Math.random() * (100 - (3 * 2))) + 300 + 3;
+                setTimeout(function() {
+                  circle.clone().stop().animate({ "100%": { cx: x, cy: y, easing: "<>" } }, 1000);
+                }, t += 1);
+              });
+            }, 1000);
+          },
+          function() {
+            slave3.animate({ opacity: 1 }, 1000);
+            s3text.animate({ opacity: 1 }, 1000);
+
+            setTimeout(function() {
+              var t = 0;
+              data.forEach(function(circle) {
+                var x = (Math.random() * (100 - (3 * 2))) + (center.x + 300 - 50) + 3,
+                    y = (Math.random() * (100 - (3 * 2))) + 300 + 3;
+                setTimeout(function() {
+                  circle.clone().stop().animate({ "100%": { cx: x, cy: y, easing: "<>" } }, 1000);
+                }, t += 1);
+              });
+            }, 1000);
+          },
+          function() {
+            var other_data = paper.set();
+            for(var i = 0; i < 1000; i++) { other_data.push(paper.circle(center.x, -100, 3).attr({ fill: randomColor() })); }
+            var t = 0;
+            other_data.forEach(function(datum) {
+              var mx  = (Math.random() * (200 - (3 * 2))) + (center.x - 100) + 3,
+                  my  = (Math.random() * (100 - (3 * 2))) + 50 + 3,
+                  s1x = (Math.random() * (100 - (3 * 2))) + (center.x - 300 - 50) + 3,
+                  s1y = (Math.random() * (100 - (3 * 2))) + 300 + 3,
+                  s2x = (Math.random() * (100 - (3 * 2))) + (center.x - 50) + 3,
+                  s2y = (Math.random() * (100 - (3 * 2))) + 300 + 3,
+                  s3x = (Math.random() * (100 - (3 * 2))) + (center.x + 300 - 50) + 3,
+                  s3y = (Math.random() * (100 - (3 * 2))) + 300 + 3;
+              setTimeout(function() {
+                var d1 = datum.clone(),
+                    d2 = datum.clone(),
+                    d3 = datum.clone();
+                datum.animate({ "100%": { cx: mx, cy: my, easing: "<>" } }, 2000);
+                d1.animate({ "100%": { cx: mx, cy: my, easing: "<>" } }, 2000);
+                d2.animate({ "100%": { cx: mx, cy: my, easing: "<>" } }, 2000);
+                d3.animate({ "100%": { cx: mx, cy: my, easing: "<>" } }, 2000);
+                setTimeout(function() {
+                  d1.animate({ "100%": { cx: s1x, cy: s1y, easing: "<>" } }, 2000);
+                  d2.animate({ "100%": { cx: s2x, cy: s2y, easing: "<>" } }, 2000);
+                  d3.animate({ "100%": { cx: s3x, cy: s3y, easing: "<>" } }, 2000);
+                  setTimeout(function() {
+                    d1.animate({ "100%": { cy: paper.height, easing: "<>", opacity: 0 } }, 2000);
+                    d2.animate({ "100%": { cy: paper.height, easing: "<>", opacity: 0 } }, 2000);
+                    d3.animate({ "100%": { cy: paper.height, easing: "<>", opacity: 0 } }, 2000);
+                  }, 3000);
+                }, 3000);
+              }, t += 3000);
+            });
+          }
+        ];
+
+        document.getElementById("paper").onclick = function() {
+          steps[step++]();
+        };
       });
     </script>
   </head>
   <body>
-    <div id="raphael"></div>
+    <div id="paper"></div>
   </body>
 </html>
